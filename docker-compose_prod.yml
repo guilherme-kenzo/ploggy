@@ -5,40 +5,43 @@ services:
     ploggy:
         build: ./
         env_file: 
-            - ".env"
+            - .env
         command: gunicorn ploggy.wsgi:application --bind 0.0.0.0:8000
         volumes:
             - ./:/code
         ports:
             - 8000:8000
-        expose:
-            - "8000"
+        # expose:
+        #     - "8000"
         networks:
             - postgres-net
-
+            - proxy
+        depends_on:
+            - postgres
         
     postgres:
         image: postgres:latest
-        environment:
-            - POSTGRES_DB=postgres
-            - POSTGRES_USER=postgres
-            - POSTGRES_PASSWORD=postgres
         networks: 
             - postgres-net
         volumes:
             - postgres-data:/mnt/usbdrive/ploggypostgres/
 
     nginx:
-        build: ./nginx
+        build: .
+        env_file:
+            - .env
         ports:
             - 1337:80
+        expose:
+            - 80
         depends_on:
             - ploggy
         networks:
-            - postgres-net
+            - proxy
 
 volumes:
     postgres-data:
 
 networks:
     postgres-net:
+    proxy:
